@@ -1,77 +1,50 @@
-🌐 Netrunner-Media-Server
+# ⚡ Netrunner Media Database & AI Recommender
 
-    A high-performance, open-standard MCP media server with database AI-tagged works for local AI assistants.
+> "Data is the new currency. Let's rob the TMDB bank." — Lucie
 
-Netrunner-Media-Server is a localized brain for media discovery. It turns any AI assistant into an expert cinephile by providing access to a massive database of 20,000+ Movies, TV Shows, and Animes.
+[FR] Ce projet est un écosystème complet pour gérer votre bibliothèque média. Il extrait les données de TMDB, les enrichit via une IA locale (Ollama) et permet à un assistant (Xiaozhi ou autre/Lucie) de vous faire des recommandations basées sur vos goûts.
 
-Unlike standard databases, every entry has been processed by a local LLM (3B model) to extract "mood tags," allowing your assistant to understand the soul of a film rather than just its genre.
-✨ Key Features
+[EN] This project is a complete ecosystem to manage your media library. It extracts TMDB data, enriches it via local AI (Ollama), and allows an assistant (Xiaozhi or another/Lucie) to give you personalized recommendations.
 
-    🧠 AI-Powered Database: A database of 20,000+ synopses tagged one-by-one by a local AI for metadata.
+---
 
-    📡 MCP Standard: Built on the Model Context Protocol (MCP), making it instantly compatible with Claude, Ollama, and specialized hardware like the Xiaozhi (ESP32) box.
+## 🛠️ Project Structure / Structure du Projet
 
-    🌍 Multilingual Support: While mood_tags are stored in French, modern LLMs can query the server in English, Chinese, or any other language without issues.
+- `run_export.bat`: [EN] Entry point for TMDB extraction / [FR] Point d'entrée pour l'extraction TMDB.
+- `tagging.bat`: [EN] Launches AI Tagger & Stats Monitor / [FR] Lance le tagueur IA et le moniteur de stats.
+- `scripts/`: [EN] Core Python logic / [FR] Cœur du réacteur (Python).
+- `Netrun.db`: [EN] SQLite database / [FR] Base de données SQLite.
 
-    🎯 Smart Profiling: The server analyzes your "Liked" history (user_rating = 1) to suggest new content based on your personal taste.
+---
 
-    ⚡ Ultra-Lightweight: Optimized for Raspberry Pi using SQLite with WAL mode for near-instant responses.
+## 🚀 Setup & Configuration
 
-🛠️ The Backstory (The Marathon)
+### 1. Requirements / Prérequis
+- **Python 3.10+**
+- **Ollama**: [ollama.com](https://ollama.com) (Model: `qwen2.5:3b`)
+- **TMDB API Key**: [themoviedb.org](https://www.themoviedb.org/settings/api)
 
-To ensure privacy and quality, this database was built during a local processing:
+### 2. Personality Training / Entraînement (Important!)
+[FR] **Très important :** Pour que l'IA comprenne vos goûts, vous devez remplir manuellement quelques lignes dans la colonne `user_rating` de la table `media` :
+- `1` : Aimé / Liked
+- `0` : Neutre / Neutral
+- `-1` : Détesté / Disliked
 
-    AI Model: Llama-based 3B model via Ollama.
+[EN] **Crucial Step:** For the AI to understand your tastes, you must manually rate a few titles in the `user_rating` column:
+- `1` : Liked
+- `0` : Neutral
+- `-1` : Disliked
 
-    Result: A local metadata layer that captures atmospheres like "Dark," "Epic," "Misty," or "Psychological."
+---
 
-🚀 Getting Started
-1. Requirements
+## 🛰️ How to Use / Mode d'Emploi
 
-    A Raspberry Pi (or any Linux/Python server).
+1. **Extraction**: Run `run_export.bat` (Edit it first to add your API Key). / Exécutez `run_export.bat` (Modifiez-le d'abord pour ajouter votre clé API).
+2. **AI Tagging**: Ensure `ollama serve` is running, then launch `tagging.bat`. / Assurez-vous que `ollama serve` est en cours d'exécution, puis lancez `tagging.bat`.
+3. **Enjoy**: Your database is now ready for the AI prompt! / Votre base de données est maintenant prête pour l'IA !
 
-    Python 3.11+.
+---
 
-    The Xiaozhi.db file (provided in the /database folder).
-
-2. Installation
-
-Clone this repository and install the MCP dependencies:
-Bash
-
-pip install mcp fastmcp sqlite3
-
-3. Launch the Server
-
-Run the MCP server script:
-Bash
-
-python netrunner_server.py
-
-4. Configuration
-
-    Importing Data: If you use the provided scripts to import your own list, ensure you update your TMDB API Key in the .bat or configuration file.
-
-    AI Persona: Use the provided PROMPT.md to give your assistant its "Netrunner" personality and ruleset.
-
-🗣️ Voice Interaction Examples
-
-    "Netrunner, recommend a dark sci-fi movie from the 90s I haven't seen."
-
-    "Find me an anime with a survival vibe released after 2022."
-
-    "I loved 'Inception', update my rating and suggest something similar."
-
-📂 Repository Structure
-
-    /database: SQLite schema and the pre-tagged AI metadata.
-
-    /server: The core FastMCP Python script for your Raspberry Pi.
-
-    /tools: The original tagging scripts and import batch files.
-
-    PROMPT.md: The 2000-character optimized system prompt for the AI.
-
-⚖️ License
-
-This project is licensed under the MIT License. You are free to use, modify, and distribute it as long as the original credits are maintained.
+## 🛡️ Security Note
+> "Don't share your API Key on the grid. Keep it safe."
+> « Ne partagez pas votre clé API. Gardez-la en lieu sûr. »
