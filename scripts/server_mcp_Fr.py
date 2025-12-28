@@ -11,7 +11,6 @@ sys.stdout.reconfigure(line_buffering=True)
 # Configuration
 # ------------------------
 BASE_DIR = "/PUT_YOUR_PATH/Your_Folder"
-# VERIFIE BIEN LE NOM ICI : Xiaozhi.db ou media.db ?
 DB_PATH = os.path.join(BASE_DIR, "Netrun.db") 
 
 # ------------------------
@@ -195,4 +194,5 @@ def analyser_profil_utilisateur() -> str:
 # Lancement
 # ------------------------
 if __name__ == "__main__":
+
     mcp.run(transport="stdio")
