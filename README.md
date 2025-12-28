@@ -99,3 +99,11 @@ Server Choice: If you use the French prompt, point your MCP config to server_mcp
 ## 🛡️ Security Note
 > "Don't share your API Key on the grid. Keep it safe."
 > « Ne partagez pas votre clé API. Gardez-la en lieu sûr. »
+
+---
+
+## ❤️ Support
+If you enjoy this tool, consider buying me a bubble tea 🧋  
+Si cet outil vous plaît, pensez à m'offrir un bubble tea 🧋
+
+[**Buy Me a Coffee**](https://www.buymeacoffee.com/miw4n)
