@@ -1,6 +1,6 @@
 # ⚡ Netrunner Media Database & AI Recommender
 
-> "Data is the new currency. Let's rob the TMDB bank." — Lucie
+> "Data is the new currency. Let's rob the TMDB bank." — Lucy
 
 [FR] Ce projet est un écosystème complet pour gérer votre bibliothèque média. Il extrait les données de TMDB, les enrichit via une IA locale (Ollama) et permet à une IA de vous faire des recommandations basées sur vos goûts.
 
