@@ -1,4 +1,4 @@
-<img width="3840" height="1565" alt="image" src="https://github.com/user-attachments/assets/95a7a271-1e9f-4213-9798-0725ef57fd99" /># ⚡ Netrunner Media Database & AI Recommender
+# ⚡ Netrunner Media Database & AI Recommender
 
 > "Data is the new currency. Let's rob the TMDB bank." — Lucie
 
