@@ -1,4 +1,4 @@
-# ⚡ Netrunner Media Database & AI Recommender
+<img width="3840" height="1565" alt="image" src="https://github.com/user-attachments/assets/95a7a271-1e9f-4213-9798-0725ef57fd99" /># ⚡ Netrunner Media Database & AI Recommender
 
 > "Data is the new currency. Let's rob the TMDB bank." — Lucie
 
@@ -15,6 +15,33 @@
 [EN] This project is designed to work with the **Model Context Protocol (MCP)** standard. The `Netrun.db` database is structured to be read by an MCP server, allowing any AI (Xiaozhi, Claude, etc.) to access your media, analyze your tastes, and recommend content in real-time.
 
 ---
+
+## 🔗 MCP Server Configuration / Configuration du Serveur MCP
+
+[FR] Connexion à l'IA : Pour que l'IA puisse accéder à la base de données, vous devez déclarer le serveur dans votre application MCP. Modifiez le chemin vers server_mcp.py dans votre configuration.
+{
+  "mcpServers": {
+    "netrunner": {
+      "command": "python",
+      "args": ["C:/PUT_YOUR_PATH/scripts/server_mcp_Fr.py"]
+    }
+  }
+}
+
+[EN] Connecting to AI: To allow the AI to access the database, you must declare the server in your MCP app. Update the path to server_mcp.py in your configuration.
+{
+  "mcpServers": {
+    "netrunner": {
+      "command": "python",
+      "args": ["C:/PUT_YOUR_PATH/scripts/server_mcp_En.py"]
+    }
+  }
+}
+
+
+---
+
+
 
 ## 🛠️ Project Structure / Structure du Projet
 
