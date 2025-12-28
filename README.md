@@ -3,9 +3,11 @@
 > "Data is the new currency. Let's rob the TMDB bank." — Lucie
 
 [FR] Ce projet est un écosystème complet pour gérer votre bibliothèque média. Il extrait les données de TMDB, les enrichit via une IA locale (Ollama) et permet à une IA de vous faire des recommandations basées sur vos goûts.
+
 Choix du serveur : Si vous utilisez le prompt en Français, configurez votre MCP sur server_mcp_Fr.py. Pour le prompt Anglais, utilisez server_mcp_En.py. Cela garantit que l'IA reçoit des réponses techniques dans la même langue que sa personnalité.
 
 [EN] This project is a complete ecosystem to manage your media library. It extracts TMDB data, enriches it via local AI (Ollama), and allows an AI to give you personalized recommendations.
+
 Server Choice: If you use the French prompt, point your MCP config to server_mcp_Fr.py. For the English prompt, use server_mcp_En.py. This ensures the AI receives technical feedback in the same language as its personality.
 
 ---
