@@ -19,7 +19,7 @@
 ## 🔗 MCP Server Configuration / Configuration du Serveur MCP
 
 [FR] Connexion à l'IA : Pour que l'IA puisse accéder à la base de données, vous devez déclarer le serveur dans votre application MCP. Modifiez le chemin vers server_mcp.py dans votre configuration.
-{
+>{
   "mcpServers": {
     "netrunner": {
       "command": "python",
@@ -29,7 +29,7 @@
 }
 
 [EN] Connecting to AI: To allow the AI to access the database, you must declare the server in your MCP app. Update the path to server_mcp.py in your configuration.
-{
+>{
   "mcpServers": {
     "netrunner": {
       "command": "python",
