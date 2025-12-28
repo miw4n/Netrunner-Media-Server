@@ -76,18 +76,24 @@ Server Choice: If you use the French prompt, point your MCP config to server_mcp
 
 ---
 
-## 🛰️ How to Use / Mode d'Emploi
-
 ### [FR] Mode d'emploi
-1. **Extraction** : Lancez `run_export.bat` (Éditez-le d'abord pour ajouter votre clé API).
-2. **Tagging IA** : Vérifiez qu'Ollama est lancé (`ollama serve`), puis lancez `tagging.bat`.
-3. **Base de données** : Vous pouvez utiliser la base pré-remplie dans `database French Tagged/` pour sauter l'étape de scan.
+1. **Extraction** : Lancez `run_export.bat` (Éditez-le d'abord pour ajouter votre clé API TMDB).
+2. **Tagging IA** : Vérifiez qu'Ollama est lancé (`ollama serve`), puis lancez `tagging.bat` pour enrichir la base.
+3. **Base de données** : Vous pouvez copier la base pré-remplie depuis `database French Tagged/` à la racine pour sauter les étapes 1 et 2.
+4. **Activation IA (MCP)** : 
+   - Choisissez votre langue (`server_mcp_Fr.py` ou `_En.py`).
+   - Ajoutez le chemin du script dans votre configuration MCP (ex: Claude Desktop).
+   - Injectez le contenu de `role_prompt_Fr.txt` (ou En) dans votre assistant pour activer la personnalité de Lucie.
 
 ### [EN] Instructions
-1. **Extraction**: Run `run_export.bat` (Edit it first to add your API Key).
-2. **AI Tagging**: Ensure `ollama serve` is running, then launch `tagging.bat`.
-3. **Database**: You can use the pre-tagged database in `database French Tagged/` to skip the AI processing time.
-
+1. **Extraction**: Run `run_export.bat` (Edit it first to add your TMDB API Key).
+2. **AI Tagging**: Ensure Ollama is running (`ollama serve`), then launch `tagging.bat` to enrich the database.
+3. **Database**: You can copy the pre-filled database from `database French Tagged/` to the root folder to skip steps 1 and 2.
+4. **AI Activation (MCP)**: 
+   - Pick your language (`server_mcp_En.py` or `_Fr.py`).
+   - Add the script path to your MCP configuration (e.g., Claude Desktop).
+   - Inject the content of `role_prompt_En.txt` (or Fr) into your assistant to trigger Lucy's personality.
+  
 ---
 
 ## 🛡️ Security Note
