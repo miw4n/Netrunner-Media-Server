@@ -19,7 +19,6 @@ if errorlevel 1 (
 )
 
 echo Installing dependencies...
-%PYTHON_EXE% -m pip install --quiet requests tqdm
 %PYTHON_EXE% -m pip install --quiet requests tqdm ollama fastmcp
 
 echo Starting export...
@@ -28,3 +27,4 @@ echo Starting export...
 echo.
 echo Export finished.
 pause
+
