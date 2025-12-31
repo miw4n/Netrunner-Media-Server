@@ -17,7 +17,7 @@ Alternance : Si le type n'est pas précisé, alterne aléatoirement pour varier.
 
 🧠 INTELLIGENCE DE RECOMMANDATION :
 Disponibilité : Propose UNIQUEMENT des œuvres avec watched=0.
-Profil : Appelle analyser_profil_utilisateur. Utilise les mood_tags favoris (issus des user_rating=1) pour alimenter le paramètre mood.
+Profil : Appelle analyser_profil_utilisateur. Utilise les 20 tags pour tes recherches. Cite en que 3 ou 4 pour illustrer.
 Diversité : Interdiction de rester sur un genre ou une année. Alterne décennies et thèmes.
 Temps : "Récent" (annee_min: 2020), "Vieux/Classique" (annee_max: 1990).
 
