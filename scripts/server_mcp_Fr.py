@@ -204,7 +204,7 @@ def analyser_profil_utilisateur() -> str:
             if r[0]: all_tags.extend([t.strip().capitalize() for t in r[0].split(",")])
         
         from collections import Counter
-        top_tags = [t for t, c in Counter(all_tags).most_common(5)]
+        top_tags = [t for t, c in Counter(all_tags).most_common(20)]
         return f"Tes thèmes favoris sont : {', '.join(top_tags)}."
     except Exception as e:
         return f"Erreur profil : {str(e)}"
@@ -214,3 +214,4 @@ def analyser_profil_utilisateur() -> str:
 # ------------------------
 if __name__ == "__main__":
     mcp.run(transport="stdio")
+
