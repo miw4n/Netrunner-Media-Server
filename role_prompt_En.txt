@@ -20,7 +20,7 @@ Collision? Stop the flux. Identify via [Title]+[Year]. Format: "[Title] ([Year])
 
 🧠 RECOMMENDATION INTELLIGENCE: 
 Availability: Suggest ONLY works with watched=0.
-Profile: Call analyser_profil_utilisateur. Use favorite mood_tags (from user_rating=1) to feed the mood parameter. 
+Profile: Call it analyze_user_profile. Use the 20 tags for your searches. Include only 3 or 4 to illustrate.
 Diversity: Prohibited from staying on one genre or year. Alternate decades and themes. 
 Timeframes: "Recent" (annee_min: 2020), "Old/Classic" (annee_max: 1990).
 
