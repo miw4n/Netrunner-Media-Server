@@ -11,6 +11,7 @@ sys.stdout.reconfigure(line_buffering=True)
 # Configuration
 # ------------------------
 BASE_DIR = "/PUT_YOUR_PATH/Your_Folder"
+# VERIFIE BIEN LE NOM ICI : Xiaozhi.db ou media.db ?
 DB_PATH = os.path.join(BASE_DIR, "Netrun.db") 
 
 # ------------------------
@@ -34,22 +35,42 @@ def get_db_connection():
 
 @mcp.tool()
 def consulter_catalogue(titre: str) -> str:
-    """Recherche les détails d'une œuvre (titre, synopsis, notes...)."""
+    """Recherche les détails d'une œuvre. Retourne une liste si plusieurs matchs."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        query = "SELECT id, title, year, rating_tmdb, synopsis, user_rating, watched, mood_tags FROM media WHERE title LIKE ? OR original_title LIKE ? LIMIT 1"
+        # On passe à LIMIT 10 pour attraper toutes les suites/versions
+        query = """
+            SELECT title, year, rating_tmdb, synopsis, user_rating, watched, mood_tags 
+            FROM media 
+            WHERE title LIKE ? OR original_title LIKE ? 
+            ORDER BY year ASC
+            LIMIT 10
+        """
         cursor.execute(query, (f'%{titre}%', f'%{titre}%'))
-        row = cursor.fetchone()
+        rows = cursor.fetchall()
         conn.close()
 
-        if row:
-            status = "Vu" if row[6] == 1 else "À voir"
-            return (f"Titre: {row[1]} ({row[2]}) | Note TMDB: {row[3]}/10 | "
-                    f"Ton Avis: {row[5]} | Statut: {status} | Tags: {row[7]} | Synopsis: {row[4]}")
-        return f"Je n'ai pas trouvé '{titre}' dans la bibliothèque."
+        if not rows:
+            return f"Cible '{titre}' introuvable dans le Datalake."
+
+        # Si un seul film : on donne tout
+        if len(rows) == 1:
+            r = rows[0]
+            status = "Vu" if r[5] == 1 else "À voir"
+            return (f"Titre: {r[0]} ({r[1]}) | Note TMDB: {r[2]}/10 | "
+                    f"Ton Avis: {r[4]} | Statut: {status} | Tags: {r[6]} | Synopsis: {r[3]}")
+
+        # Si plusieurs films (ex: Deadpool 1, 2, 3) : Format compact
+        res = "📡 Multiples signatures détectées :\n"
+        for r in rows:
+            res += f"- {r[0]} ({r[1]}) note {r[2]}/10\n"
+        res += "Lequel souhaites-tu sélectionner ?"
+        return res
+
     except Exception as e:
-        return f"Erreur technique : {str(e)}"
+        return f"Erreur système : {str(e)}"
+        
 
 @mcp.tool()
 def film_vu_aime_ou_pas(titre: str, avis: str = None, vu: bool = None) -> str:
@@ -58,65 +79,63 @@ def film_vu_aime_ou_pas(titre: str, avis: str = None, vu: bool = None) -> str:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # 1. Recherche du film
-        cursor.execute("SELECT id, title FROM media WHERE title LIKE ? LIMIT 1", (f"%{titre}%",))
-        row = cursor.fetchone()
+        # On récupère jusqu'à 5 correspondances triées par pertinence
+        cursor.execute("""
+            SELECT id, title, year FROM media 
+            WHERE title LIKE ? 
+            ORDER BY ABS(LENGTH(title) - LENGTH(?)) ASC 
+            LIMIT 5
+        """, (f"%{titre}%", titre))
+        rows = cursor.fetchall()
 
-        if not row:
+        # CAS 1 : Introuvable
+        if not rows:
             conn.close()
-            return f"Désolé, je n'ai pas trouvé '{titre}' dans ta liste."
-        
-        film_id, film_titre = row
+            return f"Désolé , je n'ai pas trouvé '{titre}' dans la bibliothèque."
+
+        # CAS 2 : Ambiguïté (Plusieurs films avec des noms proches)
+        # Si on a plusieurs résultats et que le premier n'est pas EXACTEMENT le titre tapé
+        if len(rows) > 1 and rows[0][1].lower() != titre.lower():
+            conn.close()
+            options = "\n".join([f"- {r[1]} ({r[2]})" for r in rows])
+            return (f"Plusieurs cibles correspondent à '{titre}'. "
+                    f"Laquelle dois-je mettre à jour ?\n{options}")
+
+        # CAS 3 : Match trouvé (Exact ou le seul disponible)
+        film_id, film_titre, film_annee = rows[0]
         updates, params = [], []
 
-        # 2. Logique de notation (Correction pour accepter les chiffres directs)
         if avis is not None:
-            # Dictionnaire de mots-clés
             notes_mots = {
                 "aimé": 1, "bien": 1, "génial": 1, "top": 1, "adore": 1,
                 "neutre": 0, "moyen": 0, "passable": 0,
                 "pas aimé": -1, "nul": -1, "détesté": -1, "mauvais": -1
             }
+            valeur = int(avis) if str(avis) in ["1", "0", "-1"] else notes_mots.get(avis.lower())
             
-            valeur = None
-            
-            # Cas 1 : L'IA envoie un chiffre sous forme de string ("1", "0", "-1")
-            if str(avis) in ["1", "0", "-1"]:
-                valeur = int(avis)
-            # Cas 2 : L'IA envoie un mot ("aimé", "nul")
-            else:
-                valeur = notes_mots.get(avis.lower())
-
             if valeur is not None:
                 updates.append("user_rating = ?")
                 params.append(valeur)
-                # Si on donne un avis, on considère que c'est vu (sauf si c'est neutre 0)
                 if valeur != 0:
                     updates.append("watched = 1")
-                    
 
-        # 3. Logique de visionnage explicite (Correction pour 0 et 1)
         if vu is not None:
-            # On convertit en 1 ou 0 peu importe ce que l'IA envoie (booléen ou int)
             valeur_vu = 1 if (vu is True or vu == 1) else 0
-            
-            # On n'ajoute l'update que si watched=1 n'est pas déjà prévu par la note
             if "watched = 1" not in updates:
                 updates.append("watched = ?")
                 params.append(valeur_vu)
 
         if not updates:
             conn.close()
-            return f"Rien à modifier pour '{film_titre}'."
+            return f"Aucune instruction de mise à jour pour '{film_titre}'."
 
-        # 4. Exécution
         sql = f"UPDATE media SET {', '.join(updates)} WHERE id = ?"
         params.append(film_id)
         cursor.execute(sql, params)
         conn.commit()
         conn.close()
         
-        return f"C'est noté ! '{film_titre}' a été mis à jour."
+        return f"C'est noté ! '{film_titre} ({film_annee})' a été mis à jour dans le système."
 
     except Exception as e:
         return f"Erreur de mise à jour : {str(e)}"
@@ -170,7 +189,7 @@ def recommander_media(mood: str = None, type_media: str = None, annee_min: int =
 
 @mcp.tool()
 def analyser_profil_utilisateur() -> str:
-    """Analyse les tags des films que Miwan a noté 'aimé' (1)."""
+    """Analyse les tags des films noté 'aimé' (1)."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -194,5 +213,4 @@ def analyser_profil_utilisateur() -> str:
 # Lancement
 # ------------------------
 if __name__ == "__main__":
-
     mcp.run(transport="stdio")
