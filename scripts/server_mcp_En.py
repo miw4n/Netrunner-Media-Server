@@ -2,17 +2,17 @@ import os
 import sqlite3
 import asyncio
 import sys
-from collections import Counter
 from mcp.server.fastmcp import FastMCP
 
-# Force real-time logging for the MCP pipe
+# Force real-time logging
 sys.stdout.reconfigure(line_buffering=True)
 
 # ------------------------
 # Configuration
 # ------------------------
 BASE_DIR = "/PUT_YOUR_PATH/Your_Folder"
-DB_PATH = os.path.join(BASE_DIR, "..", "Netrun.db") 
+# DOUBLE CHECK THE NAME HERE: Netrun.db
+DB_PATH = os.path.join(BASE_DIR, "Netrun.db") 
 
 # ------------------------
 # MCP Initialization
@@ -25,129 +25,171 @@ mcp = FastMCP("Netrunner-Media-Server")
 def get_db_connection():
     """Creates a secure connection to the SQLite database."""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA wal_autocheckpoint = 10;") 
     conn.execute("PRAGMA synchronous = NORMAL;")
     return conn
 
 # ------------------------
-# MCP Tools (English Version)
+# MCP Tools
 # ------------------------
 
 @mcp.tool()
-def consulter_catalogue(title: str) -> str:
-    """Search for media details (title, synopsis, ratings, tags)."""
+def consulter_catalogue(titre: str) -> str:
+    """Search for media details. Returns a list if multiple matches found."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        query = "SELECT title, year, rating_tmdb, synopsis, user_rating, watched, mood_tags FROM media WHERE title LIKE ? OR original_title LIKE ? LIMIT 1"
-        cursor.execute(query, (f'%{title}%', f'%{title}%'))
-        row = cursor.fetchone()
+        # LIMIT 10 to catch all sequels/versions
+        query = """
+            SELECT title, year, rating_tmdb, synopsis, user_rating, watched, mood_tags 
+            FROM media 
+            WHERE title LIKE ? OR original_title LIKE ? 
+            ORDER BY year ASC
+            LIMIT 10
+        """
+        cursor.execute(query, (f'%{titre}%', f'%{titre}%'))
+        rows = cursor.fetchall()
         conn.close()
 
-        if row:
-            status = "Watched" if row['watched'] == 1 else "Plan to Watch"
-            return (f"Title: {row['title']} ({row['year']}) | TMDB Rating: {row['rating_tmdb']}/10 | "
-                    f"User Rating: {row['user_rating']} | Status: {status} | Tags: {row['mood_tags']} | Synopsis: {row['synopsis']}")
-        return f"Database search failed: '{title}' not found in the grid."
+        if not rows:
+            return f"Target '{titre}' not found in the Datalake."
+
+        # If single match: return full details
+        if len(rows) == 1:
+            r = rows[0]
+            status = "Watched" if r[5] == 1 else "To watch"
+            return (f"Title: {r[0]} ({r[1]}) | TMDB Rating: {r[2]}/10 | "
+                    f"Your Rating: {r[4]} | Status: {status} | Tags: {r[6]} | Synopsis: {r[3]}")
+
+        # If multiple matches: Compact format
+        res = "📡 Multiple signatures detected:\n"
+        for r in rows:
+            res += f"- {r[0]} ({r[1]}) rating {r[2]}/10\n"
+        res += "Which one do you want to select?"
+        return res
+
     except Exception as e:
-        return f"Technical glitch: {str(e)}"
+        return f"System Error: {str(e)}"
+        
 
 @mcp.tool()
-def film_vu_aime_ou_pas(title: str, feedback: str = None, watched: bool = None) -> str:
-    """Update a movie/show status (watched/rating) using its title."""
+def film_vu_aime_ou_pas(titre: str, avis: str = None, vu: bool = None) -> str:
+    """Update a movie (watched/rating) by its title."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, title FROM media WHERE title LIKE ? LIMIT 1", (f"%{title}%",))
-        row = cursor.fetchone()
-
-        if not row:
-            conn.close()
-            return f"Access denied: '{title}' not found in your logs."
         
-        media_id, media_title = row['id'], row['title']
+        # Retrieve matches sorted by relevance
+        cursor.execute("""
+            SELECT id, title, year FROM media 
+            WHERE title LIKE ? 
+            ORDER BY ABS(LENGTH(title) - LENGTH(?)) ASC 
+            LIMIT 5
+        """, (f"%{titre}%", titre))
+        rows = cursor.fetchall()
+
+        # CASE 1: Not found
+        if not rows:
+            conn.close()
+            return f"Sorry, I couldn't find '{titre}' in the library."
+
+        # CASE 2: Ambiguity
+        if len(rows) > 1 and rows[0][1].lower() != titre.lower():
+            conn.close()
+            options = "\n".join([f"- {r[1]} ({r[2]})" for r in rows])
+            return (f"Multiple targets match '{titre}'. "
+                    f"Which one should I update?\n{options}")
+
+        # CASE 3: Match found
+        film_id, film_titre, film_annee = rows[0]
         updates, params = [], []
 
-        if feedback is not None:
-            # Multi-language keyword mapping
-            rating_map = {
-                "liked": 1, "loved": 1, "great": 1, "good": 1, "aimé": 1, "top": 1,
-                "neutral": 0, "okay": 0, "average": 0, "neutre": 0, "moyen": 0,
-                "disliked": -1, "bad": -1, "hated": -1, "nul": -1, "détesté": -1
+        if avis is not None:
+            # English keyword mapping
+            notes_mots = {
+                "liked": 1, "good": 1, "great": 1, "top": 1, "love": 1,
+                "neutral": 0, "okay": 0, "average": 0,
+                "disliked": -1, "bad": -1, "hated": -1, "awful": -1
             }
+            valeur = int(avis) if str(avis) in ["1", "0", "-1"] else notes_mots.get(avis.lower())
             
-            value = None
-            if str(feedback) in ["1", "0", "-1"]:
-                value = int(feedback)
-            else:
-                value = rating_map.get(feedback.lower())
-
-            if value is not None:
+            if valeur is not None:
                 updates.append("user_rating = ?")
-                params.append(value)
-                if value != 0: # If rated (liked or disliked), it's obviously watched
+                params.append(valeur)
+                if valeur != 0:
                     updates.append("watched = 1")
 
-        if watched is not None:
-            watched_val = 1 if (watched is True or watched == 1) else 0
+        if vu is not None:
+            valeur_vu = 1 if (vu is True or vu == 1) else 0
             if "watched = 1" not in updates:
                 updates.append("watched = ?")
-                params.append(watched_val)
+                params.append(valeur_vu)
 
         if not updates:
             conn.close()
-            return f"No modifications requested for '{media_title}'."
+            return f"No update instructions for '{film_titre}'."
 
         sql = f"UPDATE media SET {', '.join(updates)} WHERE id = ?"
-        params.append(media_id)
+        params.append(film_id)
         cursor.execute(sql, params)
         conn.commit()
         conn.close()
-        return f"Uplink successful: '{media_title}' has been updated."
+        
+        return f"Acknowledge! '{film_titre} ({film_annee})' has been updated in the system."
+
     except Exception as e:
-        return f"Write error: {str(e)}"
+        return f"Update Error: {str(e)}"
 
 @mcp.tool()
-def recommander_media(mood: str = None, media_type: str = None, year_min: int = None, year_max: int = None, similar_genre: str = None) -> str:
-    """Random search for unwatched media based on filters (movie, tv, or anime)."""
+def recommander_media(mood: str = None, type_media: str = None, annee_min: int = None, annee_max: int = None, genre_similaire: str = None) -> str:
+    """
+    Random search for unwatched media based on filters.
+    type_media can be 'movie', 'tv' or 'anime'.
+    """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Base query
         query = "SELECT title, year, genres, rating_tmdb, mood_tags, type FROM media WHERE watched = 0"
         params = []
 
-        if media_type:
-            query += " AND type = ?"; params.append(media_type.lower())
-        if year_min:
-            query += " AND year >= ?"; params.append(year_min)
-        if year_max:
-            query += " AND year <= ?"; params.append(year_max)
+        if type_media:
+            query += " AND type = ?"; params.append(type_media.lower())
+        
+        if annee_min:
+            query += " AND year >= ?"; params.append(annee_min)
+        
+        if annee_max:
+            query += " AND year <= ?"; params.append(annee_max)
+        
         if mood:
             query += " AND (mood_tags LIKE ? OR genres LIKE ?)"
-            params.extend([f'%{mood}%', f'%{mood}%'])
-        if similar_genre:
+            params.append(f'%{mood}%')
+            params.append(f'%{mood}%')
+            
+        if genre_similaire:
             query += " AND genres LIKE ?"
-            params.append(f'%{similar_genre}%')
+            params.append(f'%{genre_similaire}%')
 
         query += " ORDER BY RANDOM() LIMIT 5"
         cursor.execute(query, params)
         rows = cursor.fetchall()
         conn.close()
 
-        if not rows: return "No data matches your query. Try broadening the search parameters."
+        if not rows: return "I found nothing matching these criteria, try widening your search!"
         
-        res = "📡 Incoming signal! I've found these for you:\n" 
+        res = "📡 Here is what I extracted for you:\n" 
         for r in rows:
-            label = "🎬 Movie" if r['type'] == 'movie' else "📺 Show/Anime"
-            res += f"- {r['title']} ({r['year']}) | {label} | Tags: {r['mood_tags']}\n"
+            type_label = "🎬 Movie" if r[5] == 'movie' else "📺 Series/Anime"
+            res += f"- {r[0]} ({r[1]}) | {type_label} | Tags: {r[4]}\n"
         return res
     except Exception as e:
-        return f"Scan failed: {str(e)}"
+        return f"Scan Error: {str(e)}"
 
 @mcp.tool()
 def analyser_profil_utilisateur() -> str:
-    """Analyze the tags of media rated as 'Liked' (1) to find user preferences."""
+    """Analyze tags from media rated as 'liked' (1)."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -155,17 +197,20 @@ def analyser_profil_utilisateur() -> str:
         rows = cursor.fetchall()
         conn.close()
         
-        if not rows: return "Profile is empty. Rate some media first (1 = Liked)."
+        if not rows: return "You haven't rated any movies yet."
         
         all_tags = []
         for r in rows:
-            if r['mood_tags']: 
-                all_tags.extend([t.strip().capitalize() for t in r['mood_tags'].split(",")])
+            if r[0]: all_tags.extend([t.strip().capitalize() for t in r[0].split(",")])
         
+        from collections import Counter
         top_tags = [t for t, c in Counter(all_tags).most_common(5)]
-        return f"User preferences detected. Top themes: {', '.join(top_tags)}."
+        return f"Your favorite themes are: {', '.join(top_tags)}."
     except Exception as e:
-        return f"Profile analysis error: {str(e)}"
+        return f"Profile Error: {str(e)}"
 
+# ------------------------
+# Launch
+# ------------------------
 if __name__ == "__main__":
     mcp.run(transport="stdio")
