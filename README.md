@@ -9,7 +9,72 @@ Choix du serveur : Si vous utilisez le prompt en Français, configurez votre MCP
 [EN] This project is a complete ecosystem to manage your media library. It extracts TMDB data, enriches it via local AI (Ollama), and allows an AI to give you personalized recommendations.
 
 Server Choice: If you use the French prompt, point your MCP config to server_mcp_Fr.py. For the English prompt, use server_mcp_En.py. This ensures the AI receives technical feedback in the same language as its personality.
+---
 
+📡 NAVIGATION & EXPLORATION (Catalogue)
+
+    -Simple Search | Recherche simple : * "Search for the movie Inception in the catalog."
+
+        "Cherche le film Inception dans le catalogue."
+
+    -Status Check | Vérification de statut : * "Have I already watched Matrix?"
+
+        "Est-ce que j'ai déjà vu Matrix ?"
+
+    -Technical Intel | Détails techniques : * "Give me the synopsis and rating for Blade Runner 2049."
+
+        "Donne-moi le synopsis et la note de Blade Runner 2049."
+
+    -Ambiguity Management | Gestion d'ambiguïté : * "Check if there are multiple versions of Batman."
+
+        "Regarde s'il y a plusieurs versions de Batman."
+
+🧠 INTELLIGENCE & PROFILE (Analysis | Analyse)
+
+    -Profile Analysis | Analyse de profil : * "Analyze my user profile."
+
+        "Analyse mon profil utilisateur."
+
+    -Taste-Based Recommendation | Recommandation par goûts : * "Find a recent movie that matches my tastes."
+
+        "Trouve-moi un film récent qui correspond à mes goûts."
+
+    -Genre Exploration | Exploration par genre : * "Suggest a Cyberpunk-type anime that I haven't watched yet."
+
+        "Propose-moi un anime de type Cyberpunk que je n'ai pas vu."
+
+    -Classics & Mood | Classiques et Humeur : * "I'm in the mood for something dark, what do you have in stock?"
+
+        "Je suis d'humeur pour quelque chose de sombre, qu'est-ce que tu as en stock ?"
+
+💾 UPDATES (Feedback)
+
+    -Positive Feedback | Avis Positif : * "I loved the movie Interstellar, update my database."
+
+        "J'ai aimé le film Interstellar, mets à jour ma base."
+
+    -Neutral Log | Marquage Neutre : * "Mark the series Dark as watched."
+
+        "Marque la série Dark comme vue."
+
+    -Negative Feedback | Avis Négatif : * "The movie [Title] was awful, record that."
+
+        "Le film [Titre] était nul, enregistre ça."
+
+🛠️ COMPLEX QUERIES (Multi-Filters)
+
+    -Time & Type | Temps et Type : * "Find me a recent Thriller anime released between 2020 and 2025."
+
+        "Trouve-moi un anime récent de type Thriller entre 2020 et 2025."
+
+    -Similarity | Similitude : * "I want to see a movie similar to Inception from my unwatched list."
+
+        "Je veux voir un film similaire à Inception parmi les œuvres non vues."
+
+    -Random Scan | Scan Aléatoire : * "Suggest 5 random media, mix movies and series."
+
+        "Suggère-moi 5 médias aléatoires, mélange films et séries."
+        
 ---
 
 ## 🧠 MCP Integration / Intégration MCP
