@@ -9,6 +9,7 @@ Choix du serveur : Si vous utilisez le prompt en Français, configurez votre MCP
 [EN] This project is a complete ecosystem to manage your media library. It extracts TMDB data, enriches it via local AI (Ollama), and allows an AI to give you personalized recommendations.
 
 Server Choice: If you use the French prompt, point your MCP config to server_mcp_Fr.py. For the English prompt, use server_mcp_En.py. This ensures the AI receives technical feedback in the same language as its personality.
+
 ---
 
 📡 NAVIGATION & EXPLORATION (Catalogue)
