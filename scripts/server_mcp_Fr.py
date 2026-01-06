@@ -3,6 +3,12 @@ import sqlite3
 import asyncio
 import sys
 from mcp.server.fastmcp import FastMCP
+import requests
+
+# ------------------------
+# Configuration API
+# ------------------------
+TMDB_API_KEY = "YOUR_API_KEY"
 
 # Force les logs en temps réel
 sys.stdout.reconfigure(line_buffering=True)
@@ -209,9 +215,68 @@ def analyser_profil_utilisateur() -> str:
     except Exception as e:
         return f"Erreur profil : {str(e)}"
 
+
+# ------------------------
+# Tool MCP Localisation
+# ------------------------
+
+@mcp.tool()
+def verifier_streaming(titre: str, annee: int = None) -> str:
+    """Scan les ports de diffusion pour localiser une oeuvre précise sur le réseau FR."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # 1. Extraction de l'ID TMDB depuis le Datalake local
+        if annee:
+            query = "SELECT tmdb_id, type, title, year FROM media WHERE (title LIKE ? OR original_title LIKE ?) AND year = ? LIMIT 1"
+            cursor.execute(query, (f"%{titre}%", f"%{titre}%", annee))
+        else:
+            query = "SELECT tmdb_id, type, title, year FROM media WHERE title LIKE ? OR original_title LIKE ? ORDER BY ABS(LENGTH(title) - LENGTH(?)) ASC LIMIT 5"
+            cursor.execute(query, (f"%{titre}%", f"%{titre}%", titre))
+            
+        rows = cursor.fetchall()
+        conn.close()
+
+        if not rows:
+            return f"'{titre}' est absent de mes logs. Aucun signal détecté."
+
+        # 2. Gestion des collisions
+        if len(rows) > 1 and not annee:
+            res = "Plusieurs signatures détectées. Précise la cible :\n"
+            for r in rows:
+                res += f"- {r[2]} ({r[3]})\n"
+            return res
+
+        tmdb_id, m_type, real_title, r_year = rows[0]
+
+        # 3. Interrogation Live des serveurs TMDB (Région FR forcée)
+        api_type = 'tv' if m_type in ['tv', 'anime'] else 'movie'
+        url = f"https://api.themoviedb.org/3/{api_type}/{tmdb_id}/watch/providers"
+        
+        # On force la région FR pour éviter les résultats US/Globaux
+        params = {"api_key": TMDB_API_KEY, "watch_region": "FR"}
+        r_api = requests.get(url, params=params, timeout=3).json()
+        
+        # On cible uniquement 'flatrate' (les abonnements type Netflix, Disney+)
+        fr_results = r_api.get('results', {}).get('FR', {})
+        providers_data = fr_results.get('flatrate', [])
+        
+        if not providers_data:
+            # Optionnel: vérifie si dispo à l'achat/location si absent du streaming
+            if fr_results.get('rent') or fr_results.get('buy'):
+                return f"'{real_title}' ({r_year}) n'est pas inclus en streaming, uniquement dispo à l'achat ou location."
+            return f"'{real_title}' ({r_year}) n'est sur aucune plateforme de streaming connue en France."
+        
+        plateformes = ", ".join([p['provider_name'] for p in providers_data])
+        
+        return f"'{real_title}' ({r_year}) est sur {plateformes}."
+
+    except Exception as e:
+        return f"Erreur de protocole : {str(e)}."
+        
 # ------------------------
 # Lancement
 # ------------------------
 if __name__ == "__main__":
     mcp.run(transport="stdio")
-
