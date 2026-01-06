@@ -46,6 +46,10 @@ Server Choice: If you use the French prompt, point your MCP config to server_mcp
     -Classics & Mood | Classiques et Humeur : * "I'm in the mood for something dark, what do you have in stock?"
 
         "Je suis d'humeur pour quelque chose de sombre, qu'est-ce que tu as en stock ?"
+        
+    -Streaming Location | Localisation Streaming : * "Where can I watch the series Arcane?" 
+
+        "Sur quelle plateforme puis-je voir la série Arcane ?"
 
 💾 UPDATES (Feedback)
 
@@ -138,6 +142,11 @@ Server Choice: If you use the French prompt, point your MCP config to server_mcp
 - `1` : Liked
 - `0` : Neutral
 - `-1` : Disliked
+
+### 3. Streaming Configuration
+[FR] Pour la fonction verifier_streaming, assurez-vous d'avoir configuré votre TMDB_API_KEY dans le script serveur. La région est réglée sur FR par défaut dans le code pour garantir des résultats locaux.
+
+[EN] For the check_streaming function, ensure your TMDB_API_KEY is set in the server script. The region is set to FR by default but can be modified to US, GB, etc., in line 256.
 
 ---
 
